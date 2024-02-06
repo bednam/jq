@@ -16,12 +16,11 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
   val filterOpts: Opts[String] = Opts.argument[String](metavar = "filter")
   val inputOpts: Opts[String] = Opts.argument[String](metavar = "input")
 
-  def program(filter: String, input: String): IO[String] = for {
-    _ <- IO.println(filter)
+  def program(filter: String, input: String): IO[String] = 
+  for {
     json <- IO.fromEither(parse(input))
-    result = json \\ filter
-    _ <- IO.println(result.asJson)
-  } yield result.asJson.toString
+    result <- IO.fromEither(json.hcursor.get[String](filter.drop(1)))
+  } yield '"' + result + '"'
 
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.as(ExitCode.Success))

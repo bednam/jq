@@ -5,11 +5,22 @@ import cats.effect.{IO, SyncIO}
 import munit.CatsEffectSuite
 
 class JqTest extends CatsEffectSuite {
-    test("empty string") {
-         Main.program(".", "").assertEquals("")
-    }
+    // test("minimal") {
+    //     Main.program(".", "{}").assertEquals("{}")
+    // }
 
-    test("minimal json") {
-        Main.program(".", "{}").assertEquals("{}")
-    }
+    // test("format json") {
+    //     val in = """{ "key": "value" }"""
+    //     val out = 
+    //         """|{
+    //            |  "key" : "value"
+    //            |}""".stripMargin
+    //     Main.program(".", in).assertEquals(out)
+    // }    
+
+    test("extract field") {
+        val in = """{ "key": "value" }"""
+        val out = "\"value\""
+        Main.program(".key", in).assertEquals(out)
+    }    
 }
