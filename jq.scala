@@ -1,4 +1,4 @@
-//> using toolkit typelevel:latest
+//> using toolkit typelevel:0.1.21
 //> using dep io.circe::circe-parser:0.14.6
 //> using dep com.monovore::decline-effect:2.4.1
 
@@ -19,8 +19,9 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
   def program(filter: String, input: String): IO[String] = 
   for {
     json <- IO.fromEither(parse(input))
-    result <- IO.fromEither(json.hcursor.get[String](filter.drop(1)))
-  } yield '"' + result + '"'
+    extract = filter.split("\\.").toList.drop(1)
+    acursor = extract.foldLeft[ACursor](json.hcursor)((acc, curr) => acc.downField(curr))
+  } yield acursor.as[String].toOption.map('"' + _ + '"').getOrElse(null)
 
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.as(ExitCode.Success))

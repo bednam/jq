@@ -9,18 +9,30 @@ class JqTest extends CatsEffectSuite {
     //     Main.program(".", "{}").assertEquals("{}")
     // }
 
-    // test("format json") {
-    //     val in = """{ "key": "value" }"""
-    //     val out = 
-    //         """|{
-    //            |  "key" : "value"
-    //            |}""".stripMargin
-    //     Main.program(".", in).assertEquals(out)
-    // }    
+    test("format json") {
+        val in = """{ "key": "value" }"""
+        val out = 
+            """|{
+               |  "key" : "value"
+               |}""".stripMargin
+        Main.program(".", in).assertEquals(out)
+    }    
 
     test("extract field") {
         val in = """{ "key": "value" }"""
         val out = "\"value\""
         Main.program(".key", in).assertEquals(out)
     }    
+
+    test("extract nested field") {
+        val in = """{ "key": {"key": "value" } }"""
+        val out = "\"value\""
+        Main.program(".key.key", in).assertEquals(out)
+    }
+
+    test("return null on missing key") {
+        val in = """{ "key": "value" }"""
+        val out = null
+        Main.program(".keyy", in).assertEquals(out)        
+    }
 }
