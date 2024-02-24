@@ -1,6 +1,7 @@
 //> using toolkit typelevel:0.1.21
 //> using dep io.circe::circe-parser:0.14.6
 //> using dep com.monovore::decline-effect:2.4.1
+//> using file Down.scala
 
 import cats.effect.*
 import cats.implicits.*
@@ -11,6 +12,7 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import fs2.io.*
 import fs2.Stream.eval
+import scala.collection.View.Filter
 
 object Main extends CommandIOApp(name = "jq", header = "jq")  {
   val filterOpts: Opts[String] = Opts.argument[String](metavar = "filter")
