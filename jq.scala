@@ -10,23 +10,32 @@ import com.monovore.decline.effect.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import fs2.io.*
-import fs2.Stream.eval
-import scala.collection.View.Filter
 
 object Main extends CommandIOApp(name = "jq", header = "jq")  {
   val filterOpts: Opts[String] = Opts.argument[String](metavar = "filter")
   val inputOpts: Opts[String] = Opts.argument[String](metavar = "input")
 
-  def program(filter: String, input: String): IO[String] = 
-  for {
-    json <- IO.fromEither(parse(input))
-    extract = filter.split("\\.").toList.drop(1)
-    acursor = extract.foldLeft[ACursor](json.hcursor)((acc, curr) => acc.downField(curr))
-  } yield acursor.as[String].toOption.map('"' + _ + '"').getOrElse(null)
+  // def program(filter: String, input: String): IO[String] = 
+  // for {
+  //   json <- IO.fromEither(parse(input))
+  //   extract = filter.split("\\.").toList.drop(1)
+  //   acursor = extract.foldLeft[ACursor](json.hcursor)((acc, curr) => acc.downField(curr))
+  // } yield acursor.as[String].toOption.map('"' + _ + '"').getOrElse(null)
+
+
+  def program(down: String, input: String): IO[String] = 
+    IO.fromEither(parse(input)).map { json => 
+      extract(Down.parseDown(down), json.hcursor)
+    }
+
+  def extract(down: ADown, json: ACursor): String = down match {
+    case ObjectDown(key, next) => extract(next, json.downField(key))
+    case ArrayDown(index, next) => extract(next, json.downN(index))
+    case RootDown => json.as[String].toOption.map('"' + _ + '"').getOrElse(null)
+  }  
 
   def main: Opts[IO[ExitCode]] =
-    (filterOpts, inputOpts).mapN(program).map(_.as(ExitCode.Success))
+    (filterOpts, inputOpts).mapN(program).map(_.flatTap(IO.println)).map(_.as(ExitCode.Success))
 }
 
 // scala-cli jq.scala -- 'quotes' '{"quotes":[{"id":1,"quote":"Life isn’t about getting and having, it’s about giving and being.","author":"Kevin Kruse"},{"id":2,"quote":"Whatever the mind of man can conceive and believe, it can achieve.","author":"Napoleon Hill"}],"total":100,"skip":0,"limit":2}'
