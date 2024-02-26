@@ -1,4 +1,4 @@
-//> using toolkit typelevel:0.1.21
+//> using toolkit typelevel:0.1.22
 //> using dep io.circe::circe-parser:0.14.6
 //> using dep com.monovore::decline-effect:2.4.1
 //> using file Down.scala
@@ -14,14 +14,6 @@ import io.circe.syntax.*
 object Main extends CommandIOApp(name = "jq", header = "jq")  {
   val filterOpts: Opts[String] = Opts.argument[String](metavar = "filter")
   val inputOpts: Opts[String] = Opts.argument[String](metavar = "input")
-
-  // def program(filter: String, input: String): IO[String] = 
-  // for {
-  //   json <- IO.fromEither(parse(input))
-  //   extract = filter.split("\\.").toList.drop(1)
-  //   acursor = extract.foldLeft[ACursor](json.hcursor)((acc, curr) => acc.downField(curr))
-  // } yield acursor.as[String].toOption.map('"' + _ + '"').getOrElse(null)
-
 
   def program(down: String, input: String): IO[String] = 
     IO.fromEither(parse(input)).map { json => 
