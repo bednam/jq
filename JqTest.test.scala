@@ -1,22 +1,22 @@
 //> using dep org.typelevel::munit-cats-effect:2.0.0-M4
-//> using file jq.scala
+//> using files jq.scala, Down.scala
 
 import cats.effect.{IO, SyncIO}
-import munit.FunSuite
+import munit.CatsEffectSuite
 
 class JqTest extends CatsEffectSuite {
-    // test("minimal") {
-    //     Main.program(".", "{}").assertEquals("{}")
-    // }
+    test("minimal") {
+        Main.program(".", "{}").assertEquals("{}")
+    }
 
-    // test("format json") {
-    //     val in = """{ "key": "value" }"""
-    //     val out = 
-    //         """|{
-    //            |  "key" : "value"
-    //            |}""".stripMargin
-    //     Main.program(".", in).assertEquals(out)
-    // }    
+    test("format json") {
+        val in = """{ "key": "value" }"""
+        val out = 
+            """|{
+               |  "key" : "value"
+               |}""".stripMargin
+        Main.program(".", in).assertEquals(out)
+    }    
 
     test("extract field") {
         val in = """{ "key": "value" }"""
@@ -36,10 +36,31 @@ class JqTest extends CatsEffectSuite {
         Main.program(".keyy", in).assertEquals(out)        
     }
 
+    test("extract value from array") {
+        val in = """["1", "2"]"""
+        val out = "\"1\""
+        Main.program(".[0]", in).assertEquals(out)
+    }
+
     test("extract object from array") {
-        val in = """[{ "key": "value1" }, { "key": "value2" }]"""
-        val out = """{ "key": "value1" }"""
+        val in = """[{"key": "value1"}, {"key": "value2"}]"""
+        val out =  """|{
+                      |  "key" : "value1"
+                      |}""".stripMargin 
         Main.program(".[0]", in).assertEquals(out)
     }    
 
+    test("extract field with array syntax") {
+        val in = """{ "key": "value" }"""
+        val out = "\"value\""        
+        Main.program(".[\"key\"]", in).assertEquals(out)
+    }
+
+    // test("") {
+    //     Main.program(""".["key"]?""", in).assertEquals(out)
+    // }
+
+    // test("") {
+    //     Main.program(".key?", in).assertEquals(out)
+    // }    
 }

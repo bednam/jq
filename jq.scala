@@ -23,13 +23,14 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
   def extract(down: ADown, json: ACursor): String = down match {
     case ObjectDown(key, next) => extract(next, json.downField(key))
     case ArrayDown(index, next) => extract(next, json.downN(index))
-    case RootDown => json.as[String].toOption.map('"' + _ + '"').getOrElse(null)
+    case RootDown => json.focus.map(_.toString).getOrElse(null)
   }  
 
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.flatTap(IO.println)).map(_.as(ExitCode.Success))
 }
 
+// scala-cli jq.scala -- '.[0]' '[{"key": "value1"}, {"key": "value2"}]'
 // scala-cli jq.scala -- 'quotes' '{"quotes":[{"id":1,"quote":"Life isn’t about getting and having, it’s about giving and being.","author":"Kevin Kruse"},{"id":2,"quote":"Whatever the mind of man can conceive and believe, it can achieve.","author":"Napoleon Hill"}],"total":100,"skip":0,"limit":2}'
 // ccjq '.codingchallenge'
 // ccjq '.["codingchallenge"]'
