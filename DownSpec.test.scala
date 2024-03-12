@@ -37,6 +37,14 @@ class JqTest extends FunSuite {
         assertEquals(actual, expected)        
     }
 
+    test("parse optional key") {
+        val in = """.key?"""
+        val expected = ObjectDown("key", RootDown, optional = true)
+        val actual = Down.parseDown(in)
+
+        assertEquals(actual, expected)                
+    }
+
     test("parse nested key") {
         val in = """.key.key"""
         val expected = ObjectDown("key", ObjectDown("key", RootDown))
@@ -52,4 +60,12 @@ class JqTest extends FunSuite {
 
         assertEquals(actual, expected)
     }
+
+    test("parse optional field in array") {
+        val in = """.["key"]?"""
+        val expected = ObjectDown("key", RootDown, optional = true)
+        val actual = Down.parseDown(in)
+
+        assertEquals(actual, expected)
+    }    
 }

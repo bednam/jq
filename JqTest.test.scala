@@ -36,6 +36,18 @@ class JqTest extends CatsEffectSuite {
         Main.program(".keyy", in).assertEquals(out)        
     }
 
+    test("extract field with optional syntax") {
+        val in = """{ "key": "value" }"""
+        val out = "\"value\""        
+        Main.program(".key?", in).assertEquals(out)
+    }
+
+    test("return null with optional syntax when key does not exist") {
+        val in = """{ "key": "value" }"""
+        val out = "null"                
+        Main.program(".not_existing_key?", in).assertEquals(out)
+    }       
+
     test("extract value from array") {
         val in = """["1", "2"]"""
         val out = "\"1\""
@@ -56,11 +68,15 @@ class JqTest extends CatsEffectSuite {
         Main.program(".[\"key\"]", in).assertEquals(out)
     }
 
-    // test("") {
-    //     Main.program(""".["key"]?""", in).assertEquals(out)
-    // }
+    test("extract field with array optional syntax") {
+        val in = """{ "key": "value" }"""
+        val out = "\"value\""        
+        Main.program(""".["key"]?""", in).assertEquals(out)
+    }
 
-    // test("") {
-    //     Main.program(".key?", in).assertEquals(out)
-    // }    
+    test("return null with array optional syntax when key does not exist") {
+        val in = """{ "key": "value" }"""
+        val out = "null"        
+        Main.program(""".["not_existing_key"]?""", in).assertEquals(out)
+    }     
 }

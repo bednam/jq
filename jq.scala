@@ -21,7 +21,11 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
     }
 
   def extract(down: ADown, json: ACursor): String = down match {
-    case ObjectDown(key, next) => extract(next, json.downField(key))
+    case ObjectDown(key, next, optional) if optional => {
+      val cursor = json.downField(key)
+      cursor.focus.fold("null")(_ => extract(next, cursor))
+    }
+    case ObjectDown(key, next, _) => extract(next, json.downField(key))
     case ArrayDown(index, next) => extract(next, json.downN(index))
     case RootDown => json.focus.map(_.toString).getOrElse(null)
   }  
