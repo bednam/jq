@@ -9,7 +9,6 @@ object Down {
     def go(elements: List[String]): ADown = {
       elements match {
         case Nil                          => RootDown
-        case head :: tail if head.isEmpty => go(tail)
         case head :: tail if (head.startsWith("[\"") && head.endsWith("\"]")) =>
           ObjectDown(head.drop(2).dropRight(2), go(tail))
         case head :: tail if (head.startsWith("[\"") && head.endsWith("\"]?")) =>
@@ -25,6 +24,7 @@ object Down {
       }
     }
 
-    go(value.split("\\.").toList)
+    // value.split(" | ").toList.map(p => go(p.split("\\.").toList))
+    go(value.split("\\|").map(_.trim).toList.flatMap(_.split("\\.").toList).filter(_.nonEmpty))
   }
 }

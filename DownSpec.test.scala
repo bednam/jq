@@ -68,4 +68,9 @@ class JqTest extends FunSuite {
 
         assertEquals(actual, expected)
     }    
+
+    test("parse with pipe operator") {
+        val in = """.[0] | .key"""
+        val expected = ArrayDown(0, ObjectDown("key", RootDown, optional = false))
+    }
 }

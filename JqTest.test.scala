@@ -6,7 +6,11 @@ import munit.CatsEffectSuite
 
 class JqTest extends CatsEffectSuite {
     test("minimal") {
-        Main.program(".", "{}").assertEquals("{}")
+        val out = 
+            """|{
+               |  
+               |}""".stripMargin
+        Main.program(".", "{}").assertEquals(out)
     }
 
     test("format json") {
@@ -79,4 +83,10 @@ class JqTest extends CatsEffectSuite {
         val out = "null"        
         Main.program(""".["not_existing_key"]?""", in).assertEquals(out)
     }     
+
+    test("compose filters with pipe operator") {
+        val in = """[{"key": "value1"}, {"key": "value2"}]"""
+        val out = "\"value1\""
+        Main.program(""".[0] | .key""", in).assertEquals(out)
+    }
 }

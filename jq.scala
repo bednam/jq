@@ -1,4 +1,4 @@
-//> using toolkit typelevel:0.1.22
+//> using toolkit typelevel:0.1.23
 //> using dep io.circe::circe-parser:0.14.6
 //> using dep com.monovore::decline-effect:2.4.1
 //> using file Down.scala
@@ -33,11 +33,3 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.flatTap(IO.println)).map(_.as(ExitCode.Success))
 }
-
-// scala-cli jq.scala -- '.[0]' '[{"key": "value1"}, {"key": "value2"}]'
-// scala-cli jq.scala -- 'quotes' '{"quotes":[{"id":1,"quote":"Life isn’t about getting and having, it’s about giving and being.","author":"Kevin Kruse"},{"id":2,"quote":"Whatever the mind of man can conceive and believe, it can achieve.","author":"Napoleon Hill"}],"total":100,"skip":0,"limit":2}'
-// ccjq '.codingchallenge'
-// ccjq '.["codingchallenge"]'
-// ccjq '.codingchallenge?'
-// ccjq '.["codingchallenge"]?'
-
