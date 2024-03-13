@@ -72,5 +72,24 @@ class JqTest extends FunSuite {
     test("parse with pipe operator") {
         val in = """.[0] | .key"""
         val expected = ArrayDown(0, ObjectDown("key", RootDown, optional = false))
+        val actual = Down.parseDown(in)
+
+        assertEquals(actual, expected)
     }
+
+    test("parse key with brackets") {
+        val in = """.key[]"""
+        val expected = ObjectDown("key", RootDown, brackets = true)
+        val actual = Down.parseDown(in)
+
+        assertEquals(actual, expected)
+    }
+
+    test("parse optional key with brackets") {
+        val in = """.key[]?"""
+        val expected = ObjectDown("key", RootDown, optional = true, brackets = true)
+        val actual = Down.parseDown(in)
+
+        assertEquals(actual, expected)
+    }    
 }
