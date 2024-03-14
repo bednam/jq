@@ -20,13 +20,15 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
       extract(Down.parseDown(down), json.hcursor)
     }
 
-  def extract(down: ADown, json: ACursor): String = down match {
-    case ObjectDown(key, next, optional) if optional => {
+  def extract(down: ADown, json: ACursor, brackets: Boolean = false): String = down match {
+    case ObjectDown(key, next, _, brackets) if key.isEmpty => extract(next, json, brackets)
+    case ObjectDown(key, next, optional, brackets) if optional => {
       val cursor = json.downField(key)
-      cursor.focus.fold("null")(_ => extract(next, cursor))
+      cursor.focus.fold("null")(_ => extract(next, cursor, brackets))
     }
-    case ObjectDown(key, next, _) => extract(next, json.downField(key))
+    case ObjectDown(key, next, _, brackets) => extract(next, json.downField(key), brackets)
     case ArrayDown(index, next) => extract(next, json.downN(index))
+    case RootDown if brackets => json.values.getOrElse(null).map(_.toString).mkString("\n")
     case RootDown => json.focus.map(_.toString).getOrElse(null)
   }  
 

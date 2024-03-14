@@ -89,4 +89,25 @@ class JqTest extends CatsEffectSuite {
         val out = "\"value1\""
         Main.program(""".[0] | .key""", in).assertEquals(out)
     }
+
+    test("extract objects from array with no brackets") {
+        val in = """[1, 2]"""
+        val out = """|1
+                     |2""".stripMargin
+        Main.program(""".[]""", in).assertEquals(out)
+    }
+
+    test("extract values from nested array with no brackets") {
+        val in = """{"key": [1, 2]}"""
+        val out = """|1
+                     |2""".stripMargin
+        Main.program(""".key[]""", in).assertEquals(out)        
+    }    
+
+    test("extract objects from nested array with no brackets") {
+        val in = """{"key": [{"key_1": "value1"}, {"key_1": "value2"}]}"""
+        val out = """|value1
+                     |value2""".stripMargin
+        Main.program(""".key[].key_1""", in).assertEquals(out)        
+    }
 }
