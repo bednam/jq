@@ -17,7 +17,7 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
 
   def program(down: String, input: String): IO[String] = 
     IO.fromEither(parse(input)).map { json => 
-      extract(Down.parseDown(down), json.hcursor)
+      extractV2(Down.parseDown(down), json.hcursor)
     }
 
   def extract(down: ADown, json: ACursor, brackets: Boolean = false): String = down match {
@@ -31,6 +31,21 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
     case RootDown if brackets => json.values.getOrElse(null).map(_.toString).mkString("\n")
     case RootDown => json.focus.map(_.toString).getOrElse(null)
   }  
+
+  def extractV2(down: ADown, json: ACursor): String = {
+    def toList(down: ADown): List[ADown] = down match {
+      case down @ ObjectDown(_, next, _, _) => down :: toList(next)
+      case down @ ArrayDown(_, next) => down :: toList(next)
+      case down @ RootDown => Nil
+    }
+
+    toList(down).foldLeft(List(json))((acc, curr) => curr match {
+      case ObjectDown(key, _, _, brackets) if brackets => acc.flatMap(_.downField(key).values.getOrElse(null).map(_.hcursor))
+      case ObjectDown(key, _, _, _) => acc.map(_.downField(key))
+      case ArrayDown(index, _) => acc.map(_.downN(index))
+      case RootDown => acc
+    }).map(_.focus.map(_.toString).getOrElse(null)).mkString("\n")
+  }
 
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.flatTap(IO.println)).map(_.as(ExitCode.Success))
