@@ -1,8 +1,9 @@
 sealed trait ADown
 
 case object RootDown extends ADown
-case class ArrayDown(index: Int, next: ADown) extends ADown
-case class ObjectDown(key: String, next: ADown, optional: Boolean = false, brackets: Boolean = false) extends ADown
+case class IndexArray(index: Int, next: ADown) extends ADown
+case class KeyArray(key: String, next: ADown) extends ADown
+case class KeyObject(key: String, next: ADown, optional: Boolean = false) extends ADown
 
 object Down {
   def parseDown(value: String): ADown = {
@@ -10,19 +11,19 @@ object Down {
       elements match {
         case Nil                          => RootDown
         case head :: tail if (head.startsWith("[\"") && head.endsWith("\"]")) =>
-          ObjectDown(head.drop(2).dropRight(2), go(tail))
+          KeyObject(head.drop(2).dropRight(2), go(tail))
         case head :: tail if (head.startsWith("[\"") && head.endsWith("\"]?")) =>
-          ObjectDown(head.drop(2).dropRight(3), go(tail), optional = true)
+          KeyObject(head.drop(2).dropRight(3), go(tail), optional = true)
         case head :: tail if head.endsWith("[]") => 
-          ObjectDown(head.dropRight(2), go(tail), optional = false, brackets = true)
+          KeyArray(head.dropRight(2), go(tail)) 
         case head :: tail if (head.endsWith("?")) =>
-          ObjectDown(head.dropRight(1), go(tail), optional = true)
+          KeyObject(head.dropRight(1), go(tail), optional = true)
         case head :: tail if (head.startsWith("[") && head.endsWith("]")) =>
-          ArrayDown(
+          IndexArray(
             head.drop(1).dropRight(1).toInt,
             go(tail)
           )
-        case head :: tail => ObjectDown(head, go(tail))
+        case head :: tail => KeyObject(head, go(tail))
       }
     }
 

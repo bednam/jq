@@ -17,35 +17,25 @@ object Main extends CommandIOApp(name = "jq", header = "jq")  {
 
   def program(down: String, input: String): IO[String] = 
     IO.fromEither(parse(input)).map { json => 
-      extractV2(Down.parseDown(down), json.hcursor)
+      val result = extract(Down.parseDown(down), json.hcursor :: Nil).mkString("\n")
+      if(result.isEmpty) null else result
     }
 
-  def extract(down: ADown, json: ACursor, brackets: Boolean = false): String = down match {
-    case ObjectDown(key, next, _, brackets) if key.isEmpty => extract(next, json, brackets)
-    case ObjectDown(key, next, optional, brackets) if optional => {
-      val cursor = json.downField(key)
-      cursor.focus.fold("null")(_ => extract(next, cursor, brackets))
+  def extract(down: ADown, cursors: List[ACursor]): List[String] = down match {
+    case KeyObject(key, next, _) if key.isEmpty => extract(next, cursors)
+    case KeyArray(key, next) if key.isEmpty => extract(next, cursors.flatTraverse(_.values.map(_.map(_.hcursor).toList)).toList.flatten)
+    case KeyArray(key, next) => {
+      val nextCursorsOption: Option[List[HCursor]] = cursors.flatTraverse(_.downField(key).values.map(_.map(_.hcursor).toList))
+      nextCursorsOption.fold(List("null"))(extract(next, _))
     }
-    case ObjectDown(key, next, _, brackets) => extract(next, json.downField(key), brackets)
-    case ArrayDown(index, next) => extract(next, json.downN(index))
-    case RootDown if brackets => json.values.getOrElse(null).map(_.toString).mkString("\n")
-    case RootDown => json.focus.map(_.toString).getOrElse(null)
+    case KeyObject(key, next, optional) if optional => {
+      val nextCursors = cursors.map(_.downField(key))
+      Option.when(nextCursors.forall(_.focus.nonEmpty))(nextCursors).fold(List("null"))(extract(next, _))
+    }
+    case KeyObject(key, next, optional) => extract(next, cursors.map(_.downField(key)))
+    case IndexArray(index, next) => extract(next, cursors.map(_.downN(index)))
+    case RootDown => cursors.traverse(_.focus.map(_.toString)).toList.flatten
   }  
-
-  def extractV2(down: ADown, json: ACursor): String = {
-    def toList(down: ADown): List[ADown] = down match {
-      case down @ ObjectDown(_, next, _, _) => down :: toList(next)
-      case down @ ArrayDown(_, next) => down :: toList(next)
-      case down @ RootDown => Nil
-    }
-
-    toList(down).foldLeft(List(json))((acc, curr) => curr match {
-      case ObjectDown(key, _, _, brackets) if brackets => acc.flatMap(_.downField(key).values.getOrElse(null).map(_.hcursor))
-      case ObjectDown(key, _, _, _) => acc.map(_.downField(key))
-      case ArrayDown(index, _) => acc.map(_.downN(index))
-      case RootDown => acc
-    }).map(_.focus.map(_.toString).getOrElse(null)).mkString("\n")
-  }
 
   def main: Opts[IO[ExitCode]] =
     (filterOpts, inputOpts).mapN(program).map(_.flatTap(IO.println)).map(_.as(ExitCode.Success))

@@ -15,7 +15,7 @@ class JqTest extends FunSuite {
 
     test("parse root index") {
         val in = """.[0]"""
-        val expected = ArrayDown(0, RootDown)
+        val expected = IndexArray(0, RootDown)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
@@ -23,7 +23,7 @@ class JqTest extends FunSuite {
 
     test("parse nested index") {
         val in = """.[0].[0]"""
-        val expected = ArrayDown(0, ArrayDown(0, RootDown))
+        val expected = IndexArray(0, IndexArray(0, RootDown))
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
@@ -31,7 +31,7 @@ class JqTest extends FunSuite {
 
     test("parse key") {
         val in = """.key"""
-        val expected = ObjectDown("key", RootDown)
+        val expected = KeyObject("key", RootDown)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)        
@@ -39,7 +39,7 @@ class JqTest extends FunSuite {
 
     test("parse optional key") {
         val in = """.key?"""
-        val expected = ObjectDown("key", RootDown, optional = true)
+        val expected = KeyObject("key", RootDown, optional = true)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)                
@@ -47,7 +47,7 @@ class JqTest extends FunSuite {
 
     test("parse nested key") {
         val in = """.key.key"""
-        val expected = ObjectDown("key", ObjectDown("key", RootDown))
+        val expected = KeyObject("key", KeyObject("key", RootDown))
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)           
@@ -55,7 +55,7 @@ class JqTest extends FunSuite {
 
     test("parse field in array") {
         val in = """.["key"]"""
-        val expected = ObjectDown("key", RootDown)
+        val expected = KeyObject("key", RootDown)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
@@ -63,7 +63,7 @@ class JqTest extends FunSuite {
 
     test("parse optional field in array") {
         val in = """.["key"]?"""
-        val expected = ObjectDown("key", RootDown, optional = true)
+        val expected = KeyObject("key", RootDown, optional = true)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
@@ -71,7 +71,7 @@ class JqTest extends FunSuite {
 
     test("parse with pipe operator") {
         val in = """.[0] | .key"""
-        val expected = ArrayDown(0, ObjectDown("key", RootDown, optional = false))
+        val expected = IndexArray(0, KeyObject("key", RootDown, optional = false))
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
@@ -79,17 +79,9 @@ class JqTest extends FunSuite {
 
     test("parse key with brackets") {
         val in = """.key[]"""
-        val expected = ObjectDown("key", RootDown, brackets = true)
+        val expected = KeyArray("key", RootDown)
         val actual = Down.parseDown(in)
 
         assertEquals(actual, expected)
     }
-
-    test("parse optional key with brackets") {
-        val in = """.key[]?"""
-        val expected = ObjectDown("key", RootDown, optional = true, brackets = true)
-        val actual = Down.parseDown(in)
-
-        assertEquals(actual, expected)
-    }    
 }

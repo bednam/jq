@@ -5,6 +5,7 @@ import cats.effect.{IO, SyncIO}
 import munit.CatsEffectSuite
 
 class JqTest extends CatsEffectSuite {
+    // basic
     test("minimal") {
         val out = 
             """|{
@@ -28,18 +29,20 @@ class JqTest extends CatsEffectSuite {
         Main.program(".key", in).assertEquals(out)
     }    
 
+    test("return null on missing key") {
+        val in = """{ "key": "value" }"""
+        val out = null
+        Main.program(".keyy", in).assertEquals(out)        
+    }    
+
+    // nested
     test("extract nested field") {
         val in = """{ "key": {"key": "value" } }"""
         val out = "\"value\""
         Main.program(".key.key", in).assertEquals(out)
     }
 
-    test("return null on missing key") {
-        val in = """{ "key": "value" }"""
-        val out = null
-        Main.program(".keyy", in).assertEquals(out)        
-    }
-
+    // question mark
     test("extract field with optional syntax") {
         val in = """{ "key": "value" }"""
         val out = "\"value\""        
