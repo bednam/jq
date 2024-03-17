@@ -10,16 +10,24 @@ import com.monovore.decline.effect.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import fs2.*
+import fs2.io.*
+import scala.util.control.NoStackTrace
 
 object Main extends CommandIOApp(name = "jq", header = "jq") {
   val filterOpts: Opts[String] = Opts.argument[String](metavar = "filter")
-  val inputOpts: Opts[String] = Opts.argument[String](metavar = "input")
+  object JqError extends NoStackTrace {
+    override def getMessage: String =
+      "couldn't parse json with provided filter"
+  }
 
-  def program(down: String, input: String): IO[String] =
-    IO.fromEither(parse(input)).map { json =>
-      val result =
-        extract(Down.parseDown(down), json.hcursor :: Nil).mkString("\n")
-      if (result.isEmpty) null else result
+  def program(down: String): Stream[IO, String] =
+    stdinUtf8[IO](1024).evalMap { input =>
+      IO.fromEither(parse(input)).flatMap { json =>
+        val result = extract(Down.parseDown(down), json.hcursor :: Nil)            
+
+        IO.raiseWhen(result.isEmpty)(JqError).as(result.mkString("", "\n", "\n"))
+      }
     }
 
   def extract(down: ADown, cursors: List[ACursor]): List[String] = down match {
@@ -51,8 +59,12 @@ object Main extends CommandIOApp(name = "jq", header = "jq") {
   }
 
   def main: Opts[IO[ExitCode]] =
-    (filterOpts, inputOpts)
-      .mapN(program)
-      .map(_.flatTap(IO.println))
+    filterOpts
+      .map(
+        program(_)
+          .through(stdoutLines[IO, String]())
+          .compile
+          .drain
+      )
       .map(_.as(ExitCode.Success))
 }

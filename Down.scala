@@ -29,7 +29,6 @@ object Down {
       }
     }
 
-    // value.split(" | ").toList.map(p => go(p.split("\\.").toList))
     go(
       value
         .split("\\|")
